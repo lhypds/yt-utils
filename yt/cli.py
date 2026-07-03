@@ -16,11 +16,11 @@ from pathlib import Path
 # minimal — full per-command options are reachable via `yt <command> -h`.
 COMMAND_HELP: dict[str, tuple[str, tuple[str, ...]]] = {
     "download": (
-        "Download a YouTube video.",
+        "Download a video from YouTube, bilibili, or any yt-dlp supported site.",
         ("yt download -u <URL>",),
     ),
     "transcript": (
-        "Transcribe a YouTube video or local media file (prompts for language).",
+        "Transcribe an online video or local media file (prompts for language).",
         (
             "yt transcript -u <URL>",
             "yt transcript -f <FILE>",

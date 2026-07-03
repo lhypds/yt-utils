@@ -1,4 +1,4 @@
-"""Download a YouTube video given its URL."""
+"""Download a video (YouTube, bilibili, etc.) given its URL."""
 
 from __future__ import annotations
 
@@ -9,18 +9,71 @@ from pathlib import Path
 from yt_dlp import YoutubeDL
 
 
+def _patch_bilibili_playurl_fallback() -> None:
+    """Work around HTTP 412 from bilibili's wbi-signed playurl API.
+
+    For anonymous clients (especially outside mainland China) bilibili's risk
+    control rejects ``/x/player/wbi/playurl`` with 412 Precondition Failed,
+    while the legacy ``/x/player/playurl`` endpoint accepts the very same
+    parameters. Retry there when the wbi call is blocked.
+    """
+    try:
+        from yt_dlp.extractor.bilibili import BilibiliBaseIE
+        from yt_dlp.networking.exceptions import HTTPError
+        from yt_dlp.utils import ExtractorError
+    except ImportError:
+        return
+    if getattr(BilibiliBaseIE, "_yt_playurl_fallback", False):
+        return
+
+    original = BilibiliBaseIE._download_playinfo
+
+    def _download_playinfo(self, bvid, cid, *args, **kwargs):
+        try:
+            return original(self, bvid, cid, *args, **kwargs)
+        except ExtractorError as err:
+            if not (isinstance(err.cause, HTTPError) and err.cause.status == 412):
+                raise
+            self.to_screen(
+                "wbi playurl API blocked (HTTP 412); retrying via legacy endpoint"
+            )
+            params = {"bvid": bvid, "cid": cid, "fnval": 4048}
+            extra_query = kwargs.get("query")
+            if isinstance(extra_query, dict):
+                params.update(extra_query)
+            params.pop("try_look", None)
+            return self._download_json(
+                "https://api.bilibili.com/x/player/playurl",
+                bvid,
+                query=params,
+                headers=kwargs.get("headers"),
+                note=f"Downloading video formats for cid {cid} (legacy API)",
+            )["data"]
+
+    BilibiliBaseIE._download_playinfo = _download_playinfo
+    BilibiliBaseIE._yt_playurl_fallback = True
+
+
 def download(
     url: str,
     output_dir: Path,
     audio_only: bool = False,
     cookies_from_browser: str | None = None,
 ) -> Path:
+    _patch_bilibili_playurl_fallback()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    name_template = "[%(channel|NA)s]_[%(title)s].%(ext)s"
+    # `channel` is YouTube-specific; other sites (e.g. bilibili) expose the
+    # account name as `uploader` instead.
+    name_template = "[%(channel,uploader|NA)s]_[%(title)s].%(ext)s"
     opts: dict = {
         "outtmpl": str(output_dir / name_template),
         "noplaylist": True,
+        # The Python API defaults to 0 retries (unlike the CLI's 10), which
+        # makes flaky CDN mirrors (e.g. bilibili's overseas ones) fatal.
+        "retries": 10,
+        "fragment_retries": 10,
+        "socket_timeout": 30,
         "extractor_args": {
             "youtube": {"player_client": ["tv_simply", "mweb", "default"]}
         },
@@ -38,7 +91,11 @@ def download(
             }
         ]
     else:
-        opts["format"] = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best"
+        opts["format"] = (
+            "bestvideo[ext=mp4]+bestaudio[ext=m4a]"
+            "/bestvideo+bestaudio"
+            "/best[ext=mp4]/best"
+        )
         opts["merge_output_format"] = "mp4"
 
     with YoutubeDL(opts) as ydl:
@@ -50,8 +107,10 @@ def download(
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Download a YouTube video.")
-    parser.add_argument("-u", "--url", required=True, help="YouTube video URL")
+    parser = argparse.ArgumentParser(
+        description="Download a video from YouTube, bilibili, or any yt-dlp supported site."
+    )
+    parser.add_argument("-u", "--url", required=True, help="Video URL (YouTube, bilibili, ...)")
     parser.add_argument(
         "-o",
         "--output-dir",

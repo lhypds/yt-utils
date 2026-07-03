@@ -4,7 +4,19 @@ yt
 
 
 Tools for transcribing and summarizing videos.  
-Initially designed for Youtube videos, but should work with any video file.  
+Initially designed for Youtube videos, but should work with any video file. 
+
+
+Video Sources Supported
+-----------------------
+
+Verified sources:
+
+| Source            | Example                                                              | Notes                                                             |
+| ----------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| YouTube           | `yt summarize -u https://www.youtube.com/watch?v=xxxxxxxx`        |                                                                   |
+| bilibili          | `yt summarize -u https://www.bilibili.com/video/xxxxxxxx/`       | Anonymous access caps at 480P; use `--cookies-from-browser` for higher quality |
+| x.com (Twitter)   | `yt summarize -u https://x.com/xxxxxxxx/status/xxxxxxxxxxxxxxx` |                                                                 |
 
 
 Setup

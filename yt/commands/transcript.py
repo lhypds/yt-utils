@@ -1,7 +1,7 @@
-"""Download a YouTube video and transcribe its audio to an SRT subtitle file.
+"""Download a video (YouTube, bilibili, etc.) and transcribe its audio to an SRT subtitle file.
 
 The transcript is generated from the audio (via faster-whisper), independent of
-any YouTube-provided captions.
+any site-provided captions.
 """
 
 from __future__ import annotations
@@ -111,10 +111,10 @@ def transcribe(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Transcribe a YouTube video or local media file to SRT and TXT."
+        description="Transcribe an online video (YouTube, bilibili, ...) or local media file to SRT and TXT."
     )
     source = parser.add_mutually_exclusive_group(required=True)
-    source.add_argument("-u", "--url", help="YouTube video URL")
+    source.add_argument("-u", "--url", help="Video URL (YouTube, bilibili, ...)")
     source.add_argument("-f", "--file", type=Path, help="Path to a local media file")
     parser.add_argument(
         "-o",

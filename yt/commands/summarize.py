@@ -1,4 +1,4 @@
-"""Summarize a YouTube video by transcribing it and asking OpenAI for the main points."""
+"""Summarize a video (YouTube, bilibili, etc.) by transcribing it and asking OpenAI for the main points."""
 
 from __future__ import annotations
 
@@ -42,10 +42,10 @@ def summarize_text(transcript: str, model: str) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Download a YouTube video, transcribe it, and summarize the main points."
+        description="Download a video (YouTube, bilibili, ...), transcribe it, and summarize the main points."
     )
     source = parser.add_mutually_exclusive_group(required=True)
-    source.add_argument("-u", "--url", help="YouTube video URL")
+    source.add_argument("-u", "--url", help="Video URL (YouTube, bilibili, ...)")
     source.add_argument(
         "-f",
         "--file",
