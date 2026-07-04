@@ -17,6 +17,7 @@ Verified sources:
 | YouTube           | `yt summarize -u https://www.youtube.com/watch?v=xxxxxxxx`        |                                                                   |
 | bilibili          | `yt summarize -u https://www.bilibili.com/video/xxxxxxxx/`       | Anonymous access caps at 480P; use `--cookies-from-browser` for higher quality |
 | x.com (Twitter)   | `yt summarize -u https://x.com/xxxxxxxx/status/xxxxxxxxxxxxxxx` |                                                                 |
+| Pornhub           | `yt summarize -u https://www.pornhub.com/view_video.php?viewkey=xxxxxxxx` |                                                        |
 
 
 Setup
