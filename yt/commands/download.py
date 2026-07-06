@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
 from yt_dlp import YoutubeDL
+
+from ..utils.threadsUtils import ThreadsIE
 
 
 def _patch_bilibili_playurl_fallback() -> None:
@@ -99,7 +102,14 @@ def download(
         opts["merge_output_format"] = "mp4"
 
     with YoutubeDL(opts) as ydl:
-        info = ydl.extract_info(url, download=True)
+        # ThreadsIE is not in yt-dlp's registry, so register it on this
+        # instance and route matching URLs to it explicitly (extractors
+        # added here would otherwise be shadowed by the generic one).
+        ie_key = None
+        if re.match(ThreadsIE._VALID_URL, url):
+            ydl.add_info_extractor(ThreadsIE())
+            ie_key = "Threads"
+        info = ydl.extract_info(url, download=True, ie_key=ie_key)
         downloads = info.get("requested_downloads") or []
         if downloads and downloads[-1].get("filepath"):
             return Path(downloads[-1]["filepath"])

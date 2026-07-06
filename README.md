@@ -19,6 +19,9 @@ Verified sources:
 | x.com (Twitter)   | `yt summarize -u https://x.com/xxxxxxxx/status/xxxxxxxxxxxxxxx` |                                                                 |
 | TikTok            | `yt summarize -u https://www.tiktok.com/@xxxxxxxx/video/xxxxxxxxxxxxxxx` |                                                         |
 | Instagram         | `yt summarize -u https://www.instagram.com/reel/xxxxxxxx/`        | May require `--cookies-from-browser` for login-gated posts        |
+| Threads           | `yt summarize -u https://www.threads.com/@xxxxxxxx/post/xxxxxxxx` | `threads.net` URLs also work                                      |
+
+All other sources supported in `yt-dlp`.  
 
 
 Setup
