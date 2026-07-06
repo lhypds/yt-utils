@@ -19,35 +19,13 @@ SHORTHANDS: dict[str, str] = {
     "t": "transcript",
 }
 
-# One-line description + sample invocations shown by `yt -h`. Keep examples
-# minimal — full per-command options are reachable via `yt <command> -h`.
-COMMAND_HELP: dict[str, tuple[str, tuple[str, ...]]] = {
-    "download": (
-        "Download a video from YouTube, bilibili, or any yt-dlp supported site.",
-        ("yt download -u <URL>",),
-    ),
-    "transcript": (
-        "Transcribe an online video or local media file (prompts for language).",
-        (
-            "yt transcript -u <URL>",
-            "yt transcript -f <FILE>",
-        ),
-    ),
-    "summarize": (
-        "Summarize a video using OpenAI (prompts for language unless input is .txt).",
-        (
-            "yt summarize -u <URL>",
-            "yt summarize -f <FILE>",
-            "yt summarize -f <FILE.txt>",
-        ),
-    ),
-    "update": (
-        "Update yt to the latest release on GitHub (lhypds/yt).",
-        (
-            "yt update",
-            "yt update -f",
-        ),
-    ),
+# One-line description per command shown by `yt -h`. Full per-command
+# options are reachable via `yt <command> -h`.
+COMMAND_HELP: dict[str, str] = {
+    "download": "Download a video (-u <URL>) from any yt-dlp supported site.",
+    "transcript": "Transcribe an online video (-u <URL>) or local file (-f <FILE>).",
+    "summarize": "Summarize a video (-u <URL>) or file (-f <FILE>) using OpenAI.",
+    "update": "Update yt to the latest GitHub release (-f to force).",
 }
 
 
@@ -75,21 +53,13 @@ def _print_help() -> None:
     print("commands:")
     name_width = max((len(c) for c in available), default=0)
     for cmd in available:
-        entry = COMMAND_HELP.get(cmd)
-        if entry is None:
+        description = COMMAND_HELP.get(cmd)
+        if description is None:
             print(f"  {cmd}")
-            continue
-        description, examples = entry
-        print(f"  {cmd:<{name_width}}  {description}")
-        for example in examples:
-            print(f"  {' ' * name_width}    {example}")
+        else:
+            print(f"  {cmd:<{name_width}}  {description}")
     print()
-    print("shortcuts (single-letter command + its flag):")
-    print("  yt -du <URL>    == yt download -u <URL>")
-    print("  yt -su <URL>    == yt summarize -u <URL>")
-    print("  yt -sf <FILE>   == yt summarize -f <FILE>")
-    print("  yt -tu <URL>    == yt transcript -u <URL>")
-    print("  yt -tf <FILE>   == yt transcript -f <FILE>")
+    print("shortcuts: yt -du == yt download -u  (also -su, -sf, -tu, -tf)")
     print()
     print("Run `yt <command> -h` for the full options of a single command.")
 
