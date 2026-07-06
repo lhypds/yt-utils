@@ -12,6 +12,13 @@ import sys
 from importlib.metadata import PackageNotFoundError, version as pkg_version
 from pathlib import Path
 
+# Single-letter command aliases: `yt -du <URL>` == `yt download -u <URL>`.
+SHORTHANDS: dict[str, str] = {
+    "d": "download",
+    "s": "summarize",
+    "t": "transcript",
+}
+
 # One-line description + sample invocations shown by `yt -h`. Keep examples
 # minimal — full per-command options are reachable via `yt <command> -h`.
 COMMAND_HELP: dict[str, tuple[str, tuple[str, ...]]] = {
@@ -77,13 +84,37 @@ def _print_help() -> None:
         for example in examples:
             print(f"  {' ' * name_width}    {example}")
     print()
+    print("shortcuts (single-letter command + its flag):")
+    print("  yt -du <URL>    == yt download -u <URL>")
+    print("  yt -su <URL>    == yt summarize -u <URL>")
+    print("  yt -sf <FILE>   == yt summarize -f <FILE>")
+    print("  yt -tu <URL>    == yt transcript -u <URL>")
+    print("  yt -tf <FILE>   == yt transcript -f <FILE>")
+    print()
     print("Run `yt <command> -h` for the full options of a single command.")
+
+
+def _expand_shorthand(argv: list[str]) -> list[str]:
+    """Expand `-du <URL>` style shortcuts into `download -u <URL>`."""
+    if not argv:
+        return argv
+    first = argv[0]
+    if (
+        len(first) >= 3
+        and first[0] == "-"
+        and first[1] in SHORTHANDS
+        and first[1:].isalpha()
+    ):
+        return [SHORTHANDS[first[1]], f"-{first[2:]}", *argv[1:]]
+    return argv
 
 
 def main(argv: list[str]) -> int:
     if argv and argv[0] in ("-v", "--version"):
         print(_version_string())
         return 0
+
+    argv = _expand_shorthand(argv)
 
     if len(argv) < 1 or argv[0] in ("-h", "--help"):
         _print_help()
