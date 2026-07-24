@@ -18,13 +18,17 @@ from .transcript import prompt_language, transcribe
 DEFAULT_MODEL = "gpt-5.5"
 
 PROMPT = (
-    "You are reading the transcript of a video. Extract the most "
-    "informational content — the specific facts, claims, numbers, names, "
-    "events, and conclusions a viewer would actually want to take away. "
-    "Skip filler, intros, sponsor reads, and rhetorical throat-clearing. "
-    "Write it as natural prose, not a bulleted list. Be faithful to the "
-    "transcript and do not invent details. "
-    "Then summarize and list out the most important points."
+    "You are reading the transcript of a video. Write a summary in Markdown "
+    "with exactly these four parts, in this order:\n"
+    "1. A title — a single `#` heading naming what the video is about.\n"
+    "2. One sentence, directly under the title, that summarizes the whole "
+    "video.\n"
+    "3. A `## Key points` section — a bulleted list of the most important "
+    "points: the specific facts, claims, numbers, names, events, and "
+    "conclusions a viewer would actually want to take away.\n"
+    "4. A `## Summary` section — a longer summary written as natural prose.\n"
+    "Skip filler, intros, sponsor reads, and rhetorical throat-clearing. Be "
+    "faithful to the transcript and do not invent details."
 )
 
 
