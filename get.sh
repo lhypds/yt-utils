@@ -174,8 +174,10 @@ chmod +x "$INSTALL_DIR"/*.sh
 # `curl … | bash` leaves stdin pointing at the script stream, which the child
 # scripts must not read. Hand them the terminal instead, so setup.sh's ffmpeg
 # install can prompt for a sudo password, or nothing at all when there is no
-# terminal.
-if [ -r /dev/tty ]; then
+# terminal. `-r` is not enough: with no controlling terminal (cron, a CI job,
+# `yt update` from an editor task) /dev/tty exists and is readable, yet opening
+# it fails — so test an actual open.
+if (: </dev/tty) 2>/dev/null; then
     CHILD_STDIN=/dev/tty
 else
     CHILD_STDIN=/dev/null
@@ -213,7 +215,8 @@ cat <<EOF
 Settings: $CONFIG_ENV
   OPENAI_API_KEY  required — $NAME asks for it the first time it is needed
 
-Upgrade:    curl -fsSL https://raw.githubusercontent.com/$REPO/master/get.sh | bash
+Upgrade:    $NAME update
+            (or re-run: curl -fsSL https://raw.githubusercontent.com/$REPO/master/get.sh | bash)
 Uninstall:  $INSTALL_DIR/uninstall.sh && rm -rf $INSTALL_DIR
             (settings are kept; remove them with: rm -rf $(dirname "$CONFIG_ENV"))
 EOF
