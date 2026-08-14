@@ -80,6 +80,5 @@ Scripts
 
 Clear  
 `./clear.sh`  
-
-Release
-`./release.sh` - Create a new release on GitHub.
+Release  
+`./release.sh` - Create a new release on GitHub.  
