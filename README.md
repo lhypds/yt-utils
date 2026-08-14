@@ -21,7 +21,7 @@ Verified sources:
 | Instagram         | `yt summarize -u https://www.instagram.com/reel/xxxxxxxx/`           | May require `--cookies-from-browser` for login-gated posts                     |
 | Threads           | `yt summarize -u https://www.threads.com/@xxxxxxxx/post/xxxxxxxx`    | `threads.net` URLs also work                                                   |
 
-And all other sources supported in `yt-dlp`.  
+And all other sources supported in `[yt-dlp](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md)`.  
 
 
 Install
