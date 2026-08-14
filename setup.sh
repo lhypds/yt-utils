@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Preparation for ./install.sh: create .venv with Python >= 3.11, upgrade pip, check ffmpeg.
+# Preparation for ./install.sh: create .venv with Python >= 3.11, upgrade pip,
+# seed the settings file in ~/.config/yt, check ffmpeg.
 # Does not install project dependencies or the global yt command — run ./install.sh after this.
 set -euo pipefail
 
@@ -37,13 +38,21 @@ source "$VENV_DIR/bin/activate"
 echo "==> Upgrading pip"
 pip install --upgrade pip
 
-if [ -f ".env.example" ]; then
-    if [ ! -f ".env" ]; then
-        cp ".env.example" ".env"
-        echo "==> Created .env from .env.example"
+# Settings live in ~/.config/yt/.env so the installed `yt` finds its keys from
+# any directory. A .env in this checkout still takes precedence, for development.
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/yt"
+CONFIG_ENV="$CONFIG_DIR/.env"
+if [ -f "$CONFIG_ENV" ]; then
+    echo "==> Keeping existing $CONFIG_ENV"
+else
+    mkdir -p "$CONFIG_DIR"
+    if [ -f ".env.example" ]; then
+        cp ".env.example" "$CONFIG_ENV"
     else
-        echo "==> Keeping existing .env"
+        : >"$CONFIG_ENV"
     fi
+    chmod 600 "$CONFIG_ENV"
+    echo "==> Created $CONFIG_ENV"
 fi
 
 if ! command -v ffmpeg >/dev/null 2>&1; then
@@ -70,6 +79,9 @@ Setup complete — ready for ./install.sh
 
 Next step (installs Python deps + global \`yt\` command):
     ./install.sh
+
+API keys go in $CONFIG_ENV (OPENAI_API_KEY).
+\`yt\` asks for it the first time it needs it.
 
 Optional: activate the venv only (no global \`yt\` yet):
     source $VENV_DIR/bin/activate

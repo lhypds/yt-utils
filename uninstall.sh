@@ -23,4 +23,7 @@ cat <<EOF
 
 To remove the virtualenv and all installed wheels:
     rm -rf $ROOT_DIR/.venv
+
+Settings (API keys) are left alone. To remove them too:
+    rm -rf ${XDG_CONFIG_HOME:-$HOME/.config}/yt
 EOF

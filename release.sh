@@ -21,6 +21,7 @@ cp -R "$ROOT_DIR/yt" "$STAGING_DIR/yt"
 # Top-level scripts and project files
 cp "$ROOT_DIR/yt.py"            "$STAGING_DIR/"
 cp "$ROOT_DIR/install.sh"       "$STAGING_DIR/"
+cp "$ROOT_DIR/get.sh"           "$STAGING_DIR/"
 cp "$ROOT_DIR/setup.sh"         "$STAGING_DIR/"
 cp "$ROOT_DIR/uninstall.sh"     "$STAGING_DIR/"
 cp "$ROOT_DIR/build.sh"         "$STAGING_DIR/"
