@@ -7,21 +7,16 @@ Tools for transcribing and summarizing videos.
 Initially designed for Youtube videos, but should work with any video file.  
 
 
-Video Sources Supported
------------------------
-
-Verified sources:  
-
-| Source            | Example                                                              | Notes                                                                          |
-| ----------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| YouTube           | `yt summarize -u https://www.youtube.com/watch?v=xxxxxxxx`           |                                                                                |
-| bilibili          | `yt summarize -u https://www.bilibili.com/video/xxxxxxxx/`           | Anonymous access caps at 480P; use `--cookies-from-browser` for higher quality |
-| x.com (Twitter)   | `yt summarize -u https://x.com/xxxxxxxx/status/xxxxxxxxxxxxxxx`      |                                                                                |
-| TikTok            | `yt summarize -u https://www.tiktok.com/@xxxxxxxx/video/xxxxxxxxxxx` |                                                                                |
-| Instagram         | `yt summarize -u https://www.instagram.com/reel/xxxxxxxx/`           | May require `--cookies-from-browser` for login-gated posts                     |
-| Threads           | `yt summarize -u https://www.threads.com/@xxxxxxxx/post/xxxxxxxx`    | `threads.net` URLs also work                                                   |
+Video Sources
+-------------
 
 And all other sources supported in [yt-dlp](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md).  
+
+bilibili  
+Anonymous access caps at 480P; use `--cookies-from-browser` for higher quality.  
+
+Instagram  
+May require `--cookies-from-browser` for login-gated posts.  
 
 
 Install
