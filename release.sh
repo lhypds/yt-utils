@@ -33,8 +33,10 @@ cp "$ROOT_DIR/LICENSE"          "$STAGING_DIR/"
 cp "$ROOT_DIR/VERSION"          "$STAGING_DIR/"
 
 # Optional dotfiles we want to ship if present (never .env — that has secrets).
+# .python-version is deliberately NOT shipped: it is this machine's pyenv pin, and
+# unpacked into the install directory it makes pyenv resolve every python there to
+# that one version — breaking setup.sh on any machine that has a different one.
 [ -f "$ROOT_DIR/.env.example"    ] && cp "$ROOT_DIR/.env.example"    "$STAGING_DIR/"
-[ -f "$ROOT_DIR/.python-version" ] && cp "$ROOT_DIR/.python-version" "$STAGING_DIR/"
 [ -f "$ROOT_DIR/.gitignore"      ] && cp "$ROOT_DIR/.gitignore"      "$STAGING_DIR/"
 
 # Strip __pycache__ from the copied package tree

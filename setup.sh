@@ -9,19 +9,36 @@ cd "$ROOT_DIR"
 
 VENV_DIR=".venv"
 
+CANDIDATES="python3.13 python3.12 python3.11 python3 python"
+
 PY=""
-for cmd in "${PYTHON:-}" python3.13 python3.12 python3.11 python3; do
+# Plain `python` is probed too: on pyenv, conda and python-is-python3 machines it
+# is often the only name that exists.
+for cmd in "${PYTHON:-}" $CANDIDATES; do
     [ -z "$cmd" ] && continue
     command -v "$cmd" >/dev/null 2>&1 || continue
     if "$cmd" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null; then
-        PY="$cmd"
+        # Keep the interpreter itself, not the name that found it. A pyenv or asdf
+        # shim picks its version from a .python-version found by walking up from
+        # the working directory, so the same name means different interpreters in
+        # different places — and this script has already cd'd into ROOT_DIR.
+        PY="$("$cmd" -c 'import sys; print(sys.executable)' 2>/dev/null)"
+        [ -n "$PY" ] || PY="$cmd"
         break
     fi
 done
 
 if [ -z "$PY" ]; then
-    echo "error: need Python >= 3.11 for this project." >&2
-    echo "  PYTHON=/opt/homebrew/bin/python3.12 ./setup.sh" >&2
+    echo "error: need Python >= 3.11 for this project, and none of these is:" >&2
+    for cmd in $CANDIDATES; do
+        command -v "$cmd" >/dev/null 2>&1 || continue
+        echo "    $cmd -> $("$cmd" --version 2>&1 | head -1)" >&2
+    done
+    if [ -f "$ROOT_DIR/.python-version" ]; then
+        echo "  Note: $ROOT_DIR/.python-version pins them all to \
+$(tr -d '[:space:]' < "$ROOT_DIR/.python-version") in this directory. Delete it if it is not yours." >&2
+    fi
+    echo "  Or point at one directly:  PYTHON=/usr/bin/python3.12 ./setup.sh" >&2
     exit 1
 fi
 

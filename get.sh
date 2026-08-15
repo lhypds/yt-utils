@@ -117,12 +117,20 @@ fi
 
 # Pick the interpreter here rather than leaving it to setup.sh, so a machine
 # without a usable Python fails before anything is downloaded or written.
+# Plain `python` is probed too: on pyenv, conda and python-is-python3 machines it
+# is often the only name that exists.
 PY=""
-for cmd in "${PYTHON:-}" python3.13 python3.12 python3.11 python3; do
+for cmd in "${PYTHON:-}" python3.13 python3.12 python3.11 python3 python; do
     [ -z "$cmd" ] && continue
     have "$cmd" || continue
     if "$cmd" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null; then
-        PY="$cmd"
+        # Hand setup.sh the interpreter itself, not the name that found it. A
+        # pyenv or asdf shim resolves against a .python-version found by walking
+        # up from the working directory, and setup.sh runs from the install
+        # directory rather than from here — where the same name can mean an
+        # older interpreter. sys.executable is the file the shim would exec.
+        PY="$("$cmd" -c 'import sys; print(sys.executable)' 2>/dev/null)"
+        [ -n "$PY" ] || PY="$cmd"
         break
     fi
 done
@@ -206,6 +214,11 @@ mkdir -p "$INSTALL_DIR"
 rm -rf "${INSTALL_DIR:?}/$NAME"
 cp -R "$STAGE"/. "$INSTALL_DIR"/
 chmod +x "$INSTALL_DIR"/*.sh
+# Releases up to 0.0.14 shipped a .python-version — the release machine's pyenv
+# pin. Left sitting here it makes pyenv resolve every python in this directory to
+# that one version, so setup.sh reports no Python >= 3.11 on a machine that has
+# one. Removed after the copy, which clears it from older installs too.
+rm -f "$INSTALL_DIR/.python-version"
 
 # `curl … | bash` leaves stdin pointing at the script stream, which the child
 # scripts must not read. Hand them the terminal instead, so setup.sh's ffmpeg
