@@ -3,7 +3,8 @@
 Settings live in ``~/.config/yt/.env`` (see ``yt.utils.configUtils`` for the
 full precedence rules). This command is just an editor in front of that file:
 it creates the file from the shipped template when it is missing, opens
-``$VISUAL`` / ``$EDITOR``, and afterwards reports which keys ended up set —
+``$VISUAL`` / ``$EDITOR`` — vim when neither is set — and afterwards reports
+which keys ended up set —
 never their values, which are secrets and have no business in a scrollback.
 
 Usage:
@@ -38,9 +39,10 @@ KEY_PURPOSE: dict[str, str] = {
     "OPENAI_API_KEY": "required for `yt summarize`",
 }
 
-# Tried in order when neither $VISUAL nor $EDITOR is set. nano first: it is the
-# one an unprepared user can actually exit.
-FALLBACK_EDITORS = ("nano", "vim", "vi")
+# Tried in order when neither $VISUAL nor $EDITOR is set. vim first because that
+# is the editor this project expects; vi next, being the one every box has even
+# without vim installed; nano last.
+FALLBACK_EDITORS = ("vim", "vi", "nano")
 
 
 def _ensure_file(path: Path) -> bool:
