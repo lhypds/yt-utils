@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -32,7 +33,10 @@ LATEST_API_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
 
 LAUNCHER = Path.home() / ".local" / "bin" / "yt"
 LAUNCHER_MARKER = "# yt-launcher:REPO="
-DEFAULT_INSTALL_DIR = Path.home() / ".yt"
+# Kept in step with get.sh, which is what actually does the installing.
+_DATA_HOME = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share")
+DEFAULT_INSTALL_DIR = _DATA_HOME / "yt"
+LEGACY_INSTALL_DIR = Path.home() / ".yt"  # where earlier releases unpacked to
 
 USER_AGENT = "yt-updater"
 
@@ -97,13 +101,37 @@ def _launcher_target() -> Path | None:
     return None
 
 
+def _same_path(a: Path, b: Path) -> bool:
+    """Whether two paths name the same place once symlinks are resolved.
+
+    One side of the comparison below comes from ``__file__.resolve()`` and the
+    other is built from ``Path.home()``, so ``==`` alone would miss the match
+    wherever the home directory is reached through a symlink — which is the
+    normal arrangement on Fedora Silverblue (``/home`` → ``/var/home``) and on
+    macOS for anything under ``/tmp``.
+    """
+    try:
+        return a.resolve() == b.resolve()
+    except OSError:
+        return a == b
+
+
 def install_dir() -> Path:
     """The install to overwrite: the one this code runs from, when that is a
     release tree; else whatever the launcher points at; else get.sh's default."""
     root = Path(__file__).resolve().parents[2]
     if (root / "install.sh").is_file() and (root / "VERSION").is_file():
-        return root
-    return _launcher_target() or DEFAULT_INSTALL_DIR
+        target = root
+    else:
+        target = _launcher_target() or DEFAULT_INSTALL_DIR
+    # An install still sitting at the pre-XDG ~/.yt is named as the new default
+    # rather than as itself, so that get.sh moves it there instead of upgrading
+    # it in place for ever. Passing it back its own path would suppress the very
+    # migration it needs, since get.sh only migrates when installing to the
+    # default location.
+    if _same_path(target, LEGACY_INSTALL_DIR):
+        return DEFAULT_INSTALL_DIR
+    return target
 
 
 # ── installer ───────────────────────────────────────────────────────────────

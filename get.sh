@@ -3,13 +3,13 @@
 #
 #   curl -fsSL https://raw.githubusercontent.com/lhypds/yt/master/get.sh | bash
 #
-# Downloads a release zip from GitHub, unpacks it into ~/.yt, then runs the
-# shipped setup.sh and install.sh — which build the venv, check for ffmpeg,
-# install the Python dependencies, and write the ~/.local/bin/yt launcher.
+# Downloads a release zip from GitHub, unpacks it into ~/.local/share/yt, then
+# runs the shipped setup.sh and install.sh — which build the venv, check for
+# ffmpeg, install the Python dependencies, and write the ~/.local/bin/yt launcher.
 #
 # Options (flag or environment variable):
 #   --version 0.0.11  YT_VERSION=0.0.11  install a specific release (default: latest)
-#   --dir PATH        YT_HOME=PATH       where to unpack (default: ~/.yt)
+#   --dir PATH        YT_HOME=PATH       where to unpack (default: ~/.local/share/yt)
 #   --help
 #
 # Re-running upgrades in place: the existing .venv and .env are kept.
@@ -17,7 +17,16 @@ set -euo pipefail
 
 NAME="yt"
 REPO="lhypds/yt"
-INSTALL_DIR="${YT_HOME:-$HOME/.$NAME}"
+# The XDG base directory layout: the program and its virtualenv go under
+# $XDG_DATA_HOME, and only the launcher install.sh writes to ~/.local/bin needs
+# to be on PATH. Settings are already at $XDG_CONFIG_HOME/yt/.env (setup.sh), so
+# this puts the last piece where the rest of the spec already points. pipx and uv
+# lay themselves out the same way, being the same shape of thing: a private
+# virtualenv fronted by one command.
+DEFAULT_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/$NAME"
+# Where earlier releases unpacked to. Migrated below rather than left behind.
+LEGACY_DIR="$HOME/.$NAME"
+INSTALL_DIR="${YT_HOME:-$DEFAULT_DIR}"
 VERSION="${YT_VERSION:-}"
 
 usage() {
@@ -30,7 +39,7 @@ Usage:
 
 Options:
     --version VERSION   release to install, e.g. 0.0.11 (default: latest)
-    --dir PATH          where to unpack (default: \$HOME/.$NAME)
+    --dir PATH          where to unpack (default: $DEFAULT_DIR)
     -h, --help          show this message
 EOF
 }
@@ -56,6 +65,33 @@ if [ -e "$INSTALL_DIR/.git" ]; then
     echo "  Install elsewhere with --dir PATH, or from inside the checkout run:" >&2
     echo "      ./setup.sh && ./install.sh" >&2
     exit 1
+fi
+
+# Earlier releases unpacked into ~/.yt. Move such an install to the XDG location
+# rather than install a second copy beside it: an upgrade should leave one yt on
+# the machine, not two, and install.sh rewrites the launcher to point at whatever
+# tree it was last run from, so the old one would simply sit there unused. Moved
+# only when the default is in play (no --dir or YT_HOME), nothing is installed at
+# the new path yet, and the old path is not a checkout someone works in.
+if [ "$INSTALL_DIR" = "$DEFAULT_DIR" ] && [ ! -e "$INSTALL_DIR" ] &&
+    [ -d "$LEGACY_DIR" ] && [ ! -e "$LEGACY_DIR/.git" ]; then
+    echo "==> Moving the existing install from $LEGACY_DIR to $INSTALL_DIR"
+    mkdir -p "$(dirname "$INSTALL_DIR")"
+    mv "$LEGACY_DIR" "$INSTALL_DIR"
+    # A virtualenv records its own absolute path — in bin/activate, and in the
+    # shebang of every console script it holds — so a moved one can no longer run
+    # its own pip, which is the first thing install.sh does. Drop it and let
+    # setup.sh build a fresh one in place. Nothing is lost that is not written
+    # down: the wheels come from requirements.txt, and the Whisper models
+    # faster-whisper downloads live in their own cache, outside this move.
+    rm -rf "${INSTALL_DIR:?}/.venv"
+    echo "    (its virtualenv is rebuilt below — a moved one cannot run pip)"
+elif [ "$INSTALL_DIR" != "$LEGACY_DIR" ] && [ -d "$LEGACY_DIR" ]; then
+    # Both paths populated: install into the one asked for, and say so rather
+    # than leaving a stale several-hundred-megabyte tree the launcher no longer
+    # points at.
+    echo "note: an older install is still at $LEGACY_DIR, unused once this finishes." >&2
+    echo "      Remove it with:  rm -rf $LEGACY_DIR" >&2
 fi
 
 OS="$(uname -s)"

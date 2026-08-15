@@ -19,12 +19,19 @@ SHORTHANDS: dict[str, str] = {
     "t": "transcript",
 }
 
+# Single-letter aliases that expand straight to a command with no flag
+# letter attached: `yt -c` == `yt config`.
+DIRECT_SHORTHANDS: dict[str, str] = {
+    "c": "config",
+}
+
 # One-line description per command shown by `yt -h`. Full per-command
 # options are reachable via `yt <command> -h`.
 COMMAND_HELP: dict[str, str] = {
     "download": "Download a video (-u <URL>) from any yt-dlp supported site.",
     "transcript": "Transcribe an online video (-u <URL>) or local file (-f <FILE>).",
     "summarize": "Summarize a video (-u <URL>) or file (-f <FILE>) using OpenAI.",
+    "config": "Edit the settings file holding your API key (--path, --show).",
     "update": "Update yt to the latest GitHub release (-f to force).",
 }
 
@@ -59,23 +66,23 @@ def _print_help() -> None:
         else:
             print(f"  {cmd:<{name_width}}  {description}")
     print()
-    print("shortcuts: yt -du == yt download -u  (also -su, -sf, -tu, -tf)")
+    print("shortcuts: yt -du == yt download -u  (also -su, -sf, -tu, -tf, -c)")
     print()
     print("Run `yt <command> -h` for the full options of a single command.")
 
 
 def _expand_shorthand(argv: list[str]) -> list[str]:
-    """Expand `-du <URL>` style shortcuts into `download -u <URL>`."""
+    """Expand `-du <URL>` / `-c` style shortcuts into their full form."""
     if not argv:
         return argv
     first = argv[0]
-    if (
-        len(first) >= 3
-        and first[0] == "-"
-        and first[1] in SHORTHANDS
-        and first[1:].isalpha()
-    ):
-        return [SHORTHANDS[first[1]], f"-{first[2:]}", *argv[1:]]
+    if len(first) < 2 or first[0] != "-" or not first[1:].isalpha():
+        return argv
+    letters = first[1:]
+    if len(letters) == 1 and letters in DIRECT_SHORTHANDS:
+        return [DIRECT_SHORTHANDS[letters], *argv[1:]]
+    if len(letters) >= 2 and letters[0] in SHORTHANDS:
+        return [SHORTHANDS[letters[0]], f"-{letters[1:]}", *argv[1:]]
     return argv
 
 
